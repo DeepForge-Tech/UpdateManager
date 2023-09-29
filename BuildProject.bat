@@ -2,7 +2,7 @@
 if exist .\build (
     rem file exists
 ) else (
-    mkdir build
+    mkdir builds
 )
 echo -- Building library Zipper
 cd src
@@ -19,8 +19,11 @@ rename "libstaticZipper.a" "libZipper.a"
 Xcopy *.a  ..\lib\  /Y
 cd ..
 rmdir .\zipper /s /q
-echo - Zipper successfully builded
+echo -- Zipper successfully builded
 cd ..
 echo -- Building UpdateManager
 g++ -o .\build\UpdateManager.exe .\src\UpdateManager.cpp .\src\resource.res -I ..\..\include -I .\src\include\ -L ..\..\lib\  -L .\src\lib\ -static -static-libgcc -static-libstdc++ -lurlmon -lcurl -lsqlite3 -lws2_32 -lwinmm -ljsoncpp -lZipper -lz -std=c++20 -w
 echo -- Build of UpdateManager finished
+echo -- Copying AppInformation.json to build
+Xcopy .\src\AppInformation.json  .\build\AppInformation.json /Y
+echo -- Copying AppInformation.json to build was successfully.

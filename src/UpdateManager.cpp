@@ -76,7 +76,7 @@ void Update::InstallLatestRelease(string version)
 
 void Update::CheckNewVersion()
 {
-    string currentVersion = AppInformation["Version"].asString();
+    string currentVersion = AppInformation["DeepForgeToolset_Version"].asString();
     string LatestVersion = database.GetLatestVersion(NameVersionTable,"stable\\latest","Version", Architecture);
     if (LatestVersion != "" && currentVersion != LatestVersion && stof(LatestVersion) > stof(currentVersion)) InstallLatestRelease(LatestVersion);
 }
