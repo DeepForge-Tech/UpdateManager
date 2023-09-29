@@ -14,19 +14,40 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+# *.dll
 
 # Fortran module files
 *.mod
 *.smod
 
 # Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# *.lai
+# *.la
+# *.a
+# *.lib
 
 # Executables
 *.exe
 *.out
 *.app
+*.zip
+*.tar.gz
+CMakeFiles/
+*.cmake
+CMakeCache.txt
+/Makefile
+/.ninja_log
+/.ninja_deps
+/build.ninja
+build/
+InstallerDeepForge_Toolset/CMakeFiles/
+InstallerDeepForge_Toolset/CMakeFiles/CMakeCache.txt
+InstallerDeepForge_Toolset/CMakeFiles/Makefile
+InstallerDeepForge_Toolset/CMakeFiles/.ninja_deps
+InstallerDeepForge_Toolset/CMakeFiles/ninja_log
+*.ninja
+/tests/
+.vscode/
+.idea/
+src/lib/
+src/UpdateManager/lib/
