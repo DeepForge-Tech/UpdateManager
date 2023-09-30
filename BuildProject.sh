@@ -141,8 +141,8 @@ echo "==> Libraries successfully installed"
 # Building
 echo "==> Building UpdateManager"
 case "${unameOut}" in
-	Darwin*) 	sudo clang++ -o UpdateManager UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./include -L ./lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a;;
-	Linux*)		sudo g++ -o UpdateManager UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./include -L ../../lib/ -L ./lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a;;
+	Darwin*) 	sudo clang++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a;;
+	Linux*)		sudo g++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ../../lib/ -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a;;
 esac
 echo "==> Build of UpdateManager finished"
 echo "==> Copying AppInformation.json to build/"
