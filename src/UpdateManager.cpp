@@ -25,6 +25,7 @@
     Created: 4 Juny 2023
     ============================================================================
 */
+#include <filesystem>
 // Checking the name of the operating system and importing the necessary libraries for this system
 #if defined(__linux__)
 #include "include/UpdateManager_Linux.hpp"
@@ -36,7 +37,6 @@ using namespace macOS;
 #include "include/UpdateManager_Windows.hpp"
 using namespace Windows;
 #endif
-#include <filesystem>
 
 Update App;
 
@@ -78,7 +78,7 @@ void Update::CheckNewVersion()
 {
     string currentVersion = AppInformation["DeepForgeToolset_Version"].asString();
     string LatestVersion = database.GetLatestVersion(NameVersionTable,"stable\\latest","Version", Architecture);
-    if (LatestVersion != "" && currentVersion != LatestVersion && stof(LatestVersion) > stof(currentVersion)) InstallLatestRelease(LatestVersion);
+    if (LatestVersion != "" && currentVersion != "" && stof(LatestVersion) > stof(currentVersion)) InstallLatestRelease(LatestVersion);
 }
 
 int main()
