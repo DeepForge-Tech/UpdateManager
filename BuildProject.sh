@@ -138,6 +138,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
    echo "==> Build of Zipper finished"
 fi
 echo "==> Libraries successfully installed"
+mkdir build
 # Building
 echo "==> Building UpdateManager"
 case "${unameOut}" in

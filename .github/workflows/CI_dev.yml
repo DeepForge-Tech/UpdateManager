@@ -14,4 +14,4 @@ jobs:
     - name: Install libraries
       run: sudo add-apt-repository universe && sudo apt update && sudo apt upgrade && sudo apt install curl && sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev libfmt-dev libsqlite3-dev libgtest-dev googletest google-mock libgmock-dev libtbb-dev
     - name: Building project
-      run: sudo g++ -o UpdateManager UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./include -L ../../lib/ -L ./lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
+      run: sudo g++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ../../lib/ -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
