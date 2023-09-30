@@ -120,7 +120,7 @@ namespace macOS
 
         void CreateSymlink(string nameSymlink, string filePath)
         {
-            char *UserFolder = getenv("USERPROFILE");
+            char *UserFolder = getenv("HOME");
             string symlinkPath = string(UserFolder) + "/Applications/" + nameSymlink;
             if (filesystem::exists(symlinkPath) == false)
                 // CreateHardLinkA(symlinkPath.c_str(), filePath.c_str(), NULL);
