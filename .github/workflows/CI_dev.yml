@@ -30,7 +30,7 @@ jobs:
       - name: Build Zipper
         run: git clone --recursive https://github.com/sebastiandev/zipper.git && cd zipper && mkdir build && cd build && cmake ../ && make
       - name: Replace *.lib files to folder ./src/lib
-        run: find . -name "*.a" -exec mv "{}" ../../src/UpdateManager/lib \; && find . -name "*.dylib" -exec mv "{}" ../../src/UpdateManager/lib \; && find . -name "*.a" -exec mv "{}" ../../src/lib \; && find . -name "*.dylib" -exec mv "{}" ../../src/lib \; && cd .. && cd .. && sudo rm -rf ./zipper
+        run: cd src && mkdir lib && cd .. && cd zipper && cd build && find . -name "*.a" -exec mv "{}" ../../src/lib \; && find . -name "*.a" -exec mv "{}" ../../src/lib \;  && cd .. && cd .. && sudo rm -rf ./zipper
       - name: Make directory build
         run: mkdir build
       - name: Building project

@@ -113,8 +113,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
    cd build
    cmake ../
    make
-   find . -name "*.a" -exec mv "{}" ../../src/UpdateManager/lib \;
-   find . -name "*.so" -exec mv "{}" ../../src/UpdateManager/lib \;
+   find . -name "*.a" -exec mv "{}" ../../src/lib \;
+   find . -name "*.so" -exec mv "{}" ../../src/lib \;
    cd .. && cd ..
    sudo rm -rf ./zipper
    echo "==> Zipper successfully builded"
@@ -130,9 +130,9 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
    cmake ../
    make
    find . -name "*.a" -exec mv "{}" ../../src/UpdateManager/lib \;
-   find . -name "*.dylib" -exec mv "{}" ../../src/UpdateManager/lib \;
+   # find . -name "*.dylib" -exec mv "{}" ../../src/UpdateManager/lib \;
    find . -name "*.a" -exec mv "{}" ../../src/lib \;
-   find . -name "*.dylib" -exec mv "{}" ../../src/lib \;
+   # find . -name "*.dylib" -exec mv "{}" ../../src/lib \;
    cd .. && cd ..
    sudo rm -rf ./zipper
    echo "==> Build of Zipper finished"
