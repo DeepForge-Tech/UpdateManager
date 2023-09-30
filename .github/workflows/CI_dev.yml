@@ -21,7 +21,7 @@ jobs:
       run: mkdir build
     - name: Building project
       run: sudo g++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ../../lib/ -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
-  build_macOS:
+  build_macOS_12:
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -37,3 +37,36 @@ jobs:
         run: mkdir build
       - name: Building project
         run: clang++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
+  build_macOS_13:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install HomeBrew
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      - name: Install libraries
+        run: brew  install jsoncpp sqlite3 sqlite-utils fmt clang-format curl googletest gcc zlib cmake
+      - name: Build Zipper
+        run: git clone --recursive https://github.com/sebastiandev/zipper.git && cd zipper && mkdir build && cd build && cmake ../ && make
+      - name: Replace *.lib files to folder ./src/lib
+        run: cd src && mkdir lib && cd .. && cd zipper && cd build && find . -name "*.a" -exec mv "{}" ../../src/lib \; && find . -name "*.a" -exec mv "{}" ../../src/lib \;  && cd .. && cd .. && sudo rm -rf ./zipper
+      - name: Make directory build
+        run: mkdir build
+      - name: Building project
+        run: clang++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
+  build_macOS_11:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install HomeBrew
+        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      - name: Install libraries
+        run: brew  install jsoncpp sqlite3 sqlite-utils fmt clang-format curl googletest gcc zlib cmake
+      - name: Build Zipper
+        run: git clone --recursive https://github.com/sebastiandev/zipper.git && cd zipper && mkdir build && cd build && cmake ../ && make
+      - name: Replace *.lib files to folder ./src/lib
+        run: cd src && mkdir lib && cd .. && cd zipper && cd build && find . -name "*.a" -exec mv "{}" ../../src/lib \; && find . -name "*.a" -exec mv "{}" ../../src/lib \;  && cd .. && cd .. && sudo rm -rf ./zipper
+      - name: Make directory build
+        run: mkdir build
+      - name: Building project
+        run: clang++ -o UpdateManager ./src/UpdateManager.cpp -DCURL_STATICLIB -I ../../include -I ./src/include -L ./src/lib  -lcurl -ljsoncpp -lsqlite3 -lZipper -lz -std=c++2a
+      
