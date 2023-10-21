@@ -42,18 +42,21 @@
 #include "zipper/unzipper.h"
 #include "Logger.cpp"
 
+/* The `#define` directive is used to define a constant value in C++. In this case, `OS_NAME` is defined as "Windows" and `NameVersionTable` is defined as "WindowsVersions". These constants can be used throughout the code to represent the operating system name and the name of the version table in the database. */
+#define OS_NAME "Windows"
+#define NameVersionTable "WindowsVersions"
+
 using namespace std;
 using namespace DB;
 using namespace Json;
 using namespace zipper;
-using namespace Logger;
 
 namespace Windows
 {   
     // int type
     int result;
     // init class
-    MainLogger logger(true, "logs/DeepForgeToolset.log");
+    Logger logger("./logs/DeepForgeToolset.log", "10mb");
     Database database;
     Value AppInformation;
     // string type
@@ -65,7 +68,6 @@ namespace Windows
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
     std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
     string DB_PATH = TempFolder + "\\Versions.db";
-    string NameVersionTable = "WindowsVersions";
 
     class WriteData : public IBindStatusCallback
     {
@@ -145,7 +147,7 @@ namespace Windows
                 HRESULT Download = URLDownloadToFile(NULL, url.c_str(), filename.c_str(), 0, static_cast<IBindStatusCallback *>(&writer));
                 return 200;
             }
-            catch (exception error)
+            catch (exception &error)
             {
                 return 502;
             }
@@ -176,48 +178,60 @@ namespace Windows
             }
             catch (exception &error)
             {
-                // Error output
-                cout << error.what() << endl;
-                logger.Error("❌ Error of import AppInformation.json");
+                logger.SendError(Architecture,"Empty",OS_NAME,"ImportAppInformation",error.what());
             }
         }
 
         /* The 'MakeDirectory' function is used to create a directory (folder) in the file system.*/
         void MakeDirectory(string dir)
         {
-            string currentDir;
-            string fullPath = "";
-            string delimiter = "\\";
-            size_t pos = 0;
-            while ((pos = dir.find(delimiter)) != string::npos)
+            try
             {
-                currentDir = dir.substr(0, pos);
-                if (fullPath != "")
+                string currentDir;
+                string fullPath = "";
+                string delimiter = "\\";
+                size_t pos = 0;
+                while ((pos = dir.find(delimiter)) != string::npos)
                 {
-                    fullPath = fullPath + "\\" + currentDir;
-                    if (filesystem::exists(fullPath) == false)
+                    currentDir = dir.substr(0, pos);
+                    if (fullPath != "")
                     {
-                        filesystem::create_directory(fullPath);
+                        fullPath = fullPath + "\\" + currentDir;
+                        if (filesystem::exists(fullPath) == false)
+                        {
+                            filesystem::create_directory(fullPath);
+                        }
                     }
+                    else
+                    {
+                        fullPath = currentDir + "\\";
+                    }
+                    dir.erase(0, pos + delimiter.length());
                 }
-                else
+                fullPath = fullPath + "\\" + dir;
+                if (filesystem::exists(fullPath) == false)
                 {
-                    fullPath = currentDir + "\\";
+                    filesystem::create_directory(fullPath);
                 }
-                dir.erase(0, pos + delimiter.length());
             }
-            fullPath = fullPath + "\\" + dir;
-            if (filesystem::exists(fullPath) == false)
+            catch (exception &error)
             {
-                filesystem::create_directory(fullPath);
+                logger.SendError(Architecture,"Empty",OS_NAME,"MakeDirectory",error.what());
             }
         }
         /*The 'UnpackArchive' function takes two parameters: 'path_from' and 'path_to'.*/
-        int UnpackArchive(string path_from, string path_to)
+        void UnpackArchive(string path_from, string path_to)
         {
-            Unzipper unzipper(path_from);
-            unzipper.extract(path_to);
-            unzipper.close();
+            try
+            {
+                Unzipper unzipper(path_from);
+                unzipper.extract(path_to);
+                unzipper.close();
+            }
+            catch (exception &error)
+            {
+                logger.SendError(Architecture,"Empty",OS_NAME,"UnpackArchive",error.what());
+            }
         }
         // Method for getting architecture of OS
         void GetArchitectureOS()
