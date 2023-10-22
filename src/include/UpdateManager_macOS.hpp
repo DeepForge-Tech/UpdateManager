@@ -40,11 +40,13 @@
 #include <curl/curl.h>
 #include "Logger.cpp"
 
+/* The `#define` statements are preprocessor directives in C++ that define constants. */
+#define OS_NAME "macOS"
+#define NameVersionTable "macOSVersions"
+
 using namespace std;
 using namespace DB;
-using namespace Json;
 using namespace zipper;
-using namespace Logger;
 
 namespace macOS
 {
@@ -55,9 +57,9 @@ namespace macOS
         return WriteProcess;
     }
     // init class
-    MainLogger logger(true, "logs/DeepForgeToolset.log");
+    Logger logger("./logs/DeepForgeToolset.log", "10mb");
     Database database;
-    Value AppInformation;
+    Json::Value AppInformation;
     // int type
     int result;
     // string type
@@ -67,9 +69,8 @@ namespace macOS
     const string ApplicationFolder = "usr/bin/DeepForge/DeepForge-Toolset";
     const string TempFolder = ApplicationFolder + "/Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
-    std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
+    filesystem::path ProjectDir = filesystem::current_path().generic_string();
     string DB_PATH = TempFolder + "/Versions.db";
-    string NameVersionTable = "macOSVersions";
 
     // Main class
     class Update
@@ -82,7 +83,7 @@ namespace macOS
             if (filesystem::exists(DB_PATH) == false)
             {
                 MakeDirectory(TempFolder);
-                Download(DB_URL,TempFolder);
+                Download(DB_URL, TempFolder);
                 database.open(&DB_PATH);
             }
         }
@@ -92,30 +93,22 @@ namespace macOS
     private:
         int Download(string url, string dir)
         {
-            try
-            {
-                string name = (url.substr(url.find_last_of("/")));
-                string filename = dir + "/" + name.replace(name.find("/"), 1, "");
-                FILE *file = fopen(filename.c_str(), "wb");
-                CURL *curl = curl_easy_init();
-                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-                curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
-                curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-                curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
-                curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-                CURLcode response = curl_easy_perform(curl);
-                curl_easy_cleanup(curl);
-                fclose(file);
-                return 200;
-            }
-            catch (exception& error)
-            {
-                cout << error.what() << endl;
-                return 502;
-            }
+            string name = (url.substr(url.find_last_of("/")));
+            string filename = dir + "/" + name.replace(name.find("/"), 1, "");
+            FILE *file = fopen(filename.c_str(), "wb");
+            CURL *curl = curl_easy_init();
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+            CURLcode response = curl_easy_perform(curl);
+            curl_easy_cleanup(curl);
+            fclose(file);
+            return 200;
         }
 
         void CreateSymlink(string nameSymlink, string filePath)
@@ -124,13 +117,14 @@ namespace macOS
             string symlinkPath = string(UserFolder) + "/Applications/" + nameSymlink;
             if (filesystem::exists(symlinkPath) == false)
                 // CreateHardLinkA(symlinkPath.c_str(), filePath.c_str(), NULL);
-                filesystem::create_hard_link(filePath,symlinkPath);
+                filesystem::create_hard_link(filePath, symlinkPath);
         }
 
         void ImportAppInformation()
         {
             try
             {
+                /* The line `ifstream f("./AppInformation.json");` is creating an input file stream object named `f` and opening the file "AppInformation.json" for reading. This allows the program to read data from the file. */
                 ifstream f("./AppInformation.json");
                 // File open check
                 if (f.is_open())
@@ -140,49 +134,62 @@ namespace macOS
                     f.close();
                 }
             }
-            catch (exception& error)
+            catch (exception &error)
             {
-                // Error output
-                cout << error.what() << endl;
+                logger.SendError(Architecture,"Empty",OS_NAME,"ImportAppInformation",error.what());
             }
         }
 
         /*The `MakeDirectory` function is responsible for creating a directory (folder) in the file system.*/
         void MakeDirectory(string dir)
         {
-            string currentDir;
-            string fullPath = "";
-            string delimiter = "/";
-            size_t pos = 0;
-            while ((pos = dir.find(delimiter)) != string::npos)
+            try
             {
-                currentDir = dir.substr(0, pos);
-                if (fullPath != "")
+                string currentDir;
+                string fullPath = "";
+                string delimiter = "/";
+                size_t pos = 0;
+                while ((pos = dir.find(delimiter)) != string::npos)
                 {
-                    fullPath = fullPath + "/" + currentDir;
-                    if (filesystem::exists(fullPath) == false)
+                    currentDir = dir.substr(0, pos);
+                    if (fullPath != "")
                     {
-                        filesystem::create_directory(fullPath);
+                        fullPath = fullPath + "/" + currentDir;
+                        if (filesystem::exists(fullPath) == false)
+                        {
+                            filesystem::create_directory(fullPath);
+                        }
                     }
+                    else
+                    {
+                        fullPath = "/" + currentDir;
+                    }
+                    dir.erase(0, pos + delimiter.length());
                 }
-                else
+                fullPath = fullPath + "/" + dir;
+                if (filesystem::exists(fullPath) == false)
                 {
-                    fullPath = "/" + currentDir;
+                    filesystem::create_directory(fullPath);
                 }
-                dir.erase(0, pos + delimiter.length());
             }
-            fullPath = fullPath + "/" + dir;
-            if (filesystem::exists(fullPath) == false)
+            catch (exception &error)
             {
-                filesystem::create_directory(fullPath);
+                logger.SendError(Architecture,"Empty",OS_NAME,"MakeDirectory",error.what());
             }
         }
         /*The 'UnpackArchive' function takes two parameters: 'path_from' and 'path_to'.*/
-        int UnpackArchive(string path_from, string path_to)
+        void UnpackArchive(string path_from, string path_to)
         {
-            Unzipper unzipper(path_from);
-            unzipper.extract(path_to);
-            unzipper.close();
+            try
+            {
+                Unzipper unzipper(path_from);
+                unzipper.extract(path_to);
+                unzipper.close();
+            }
+            catch (exception &error)
+            {
+                logger.SendError(Architecture,"Empty",OS_NAME,"UnpackArchive",error.what());
+            }
         }
         // Method for getting architecture of OS
         void GetArchitectureOS()

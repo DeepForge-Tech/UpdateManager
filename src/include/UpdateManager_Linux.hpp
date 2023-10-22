@@ -40,11 +40,13 @@
 #include <curl/curl.h>
 #include "Logger.cpp"
 
+/* The `#define` directive is used to define a constant value in C++. In this case, `OS_NAME` is defined as the string "Linux", and `NameVersionTable` is defined as the string "LinuxVersions". These constants can be used throughout the code to represent the operating system name and the name of the version table for Linux. */
+#define OS_NAME "Linux"
+#define NameVersionTable "LinuxVersions"
+
 using namespace std;
 using namespace DB;
-using namespace Json;
 using namespace zipper;
-using namespace Logger;
 
 namespace Linux
 {
@@ -54,10 +56,10 @@ namespace Linux
         size_t WriteProcess = fwrite(ptr, size, nmemb, stream);
         return WriteProcess;
     }
-    // init class
-    MainLogger logger(true, "logs/DeepForgeToolset.log");
+    // init classes
+    Logger logger("./logs/DeepForgeToolset.log", "10mb");
     Database database;
-    Value AppInformation;
+    Json::Value AppInformation;
     // int type
     int result;
     // string type
@@ -69,7 +71,6 @@ namespace Linux
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
     std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
     string DB_PATH = TempFolder + "/Versions.db";
-    string NameVersionTable = "LinuxVersions";
 
     // Main class
     class Update
@@ -92,30 +93,22 @@ namespace Linux
     private:
         int Download(string url, string dir)
         {
-            try
-            {
-                string name = (url.substr(url.find_last_of("/")));
-                string filename = dir + "/" + name.replace(name.find("/"), 1, "");
-                FILE *file = fopen(filename.c_str(), "wb");
-                CURL *curl = curl_easy_init();
-                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-                curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
-                curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-                curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
-                curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-                CURLcode response = curl_easy_perform(curl);
-                curl_easy_cleanup(curl);
-                fclose(file);
-                return 200;
-            }
-            catch (exception& error)
-            {
-                cout << error.what() << endl;
-                return 502;
-            }
+            string name = (url.substr(url.find_last_of("/")));
+            string filename = dir + "/" + name.replace(name.find("/"), 1, "");
+            FILE *file = fopen(filename.c_str(), "wb");
+            CURL *curl = curl_easy_init();
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
+            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+            CURLcode response = curl_easy_perform(curl);
+            curl_easy_cleanup(curl);
+            fclose(file);
+            return 200;
         }
 
         void CreateSymlink(string nameSymlink, string filePath)
@@ -142,47 +135,60 @@ namespace Linux
             }
             catch (exception& error)
             {
-                // Error output
-                cout << error.what() << endl;
+                logger.SendError(Architecture,"Empty",OS_NAME,"ImportAppInformation",error.what());
             }
         }
 
         /*The `MakeDirectory` function is responsible for creating a directory (folder) in the file system.*/
         void MakeDirectory(string dir)
         {
-            string currentDir;
-            string fullPath = "";
-            string delimiter = "/";
-            size_t pos = 0;
-            while ((pos = dir.find(delimiter)) != string::npos)
+            try
             {
-                currentDir = dir.substr(0, pos);
-                if (fullPath != "")
+                string currentDir;
+                string fullPath = "";
+                string delimiter = "/";
+                size_t pos = 0;
+                while ((pos = dir.find(delimiter)) != string::npos)
                 {
-                    fullPath = fullPath + "/" + currentDir;
-                    if (filesystem::exists(fullPath) == false)
+                    currentDir = dir.substr(0, pos);
+                    if (fullPath != "")
                     {
-                        filesystem::create_directory(fullPath);
+                        fullPath = fullPath + "/" + currentDir;
+                        if (filesystem::exists(fullPath) == false)
+                        {
+                            filesystem::create_directory(fullPath);
+                        }
                     }
+                    else
+                    {
+                        fullPath = "/" + currentDir;
+                    }
+                    dir.erase(0, pos + delimiter.length());
                 }
-                else
+                fullPath = fullPath + "/" + dir;
+                if (filesystem::exists(fullPath) == false)
                 {
-                    fullPath = "/" + currentDir;
+                    filesystem::create_directory(fullPath);
                 }
-                dir.erase(0, pos + delimiter.length());
             }
-            fullPath = fullPath + "/" + dir;
-            if (filesystem::exists(fullPath) == false)
+            catch (exception &error)
             {
-                filesystem::create_directory(fullPath);
+                logger.SendError(Architecture,"Empty",OS_NAME,"MakeDirectory",error.what());
             }
         }
         /*The 'UnpackArchive' function takes two parameters: 'path_from' and 'path_to'.*/
-        int UnpackArchive(string path_from, string path_to)
+        void UnpackArchive(string path_from, string path_to)
         {
-            Unzipper unzipper(path_from);
-            unzipper.extract(path_to);
-            unzipper.close();
+            try
+            {
+                Unzipper unzipper(path_from);
+                unzipper.extract(path_to);
+                unzipper.close();
+            }
+            catch (exception &error)
+            {
+                logger.SendError(Architecture,"Empty",OS_NAME,"UnpackArchive",error.what());
+            }
         }
         // Method for getting architecture of OS
         void GetArchitectureOS()
