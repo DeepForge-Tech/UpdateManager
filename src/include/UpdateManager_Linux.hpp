@@ -44,7 +44,6 @@
 
 using namespace std;
 using namespace DB;
-using namespace zipper;
 
 namespace Linux
 {
@@ -81,7 +80,7 @@ namespace Linux
             Download(DB_URL, TempFolder);
             database.open(&DB_PATH);
         }
-        void InstallLatestRelease(string name, string version);
+        void InstallLatestRelease(string name,string AppVersionTable,string version);
         void CheckNewVersion();
 
     private:
