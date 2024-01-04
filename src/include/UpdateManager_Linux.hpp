@@ -67,7 +67,7 @@ namespace Linux
     const string TempFolder = ApplicationFolder + "/Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
     string ProjectDir = std::filesystem::current_path().generic_string();
-    const string DB_PATH = TempFolder + "/Versions.db";
+    string DB_PATH = TempFolder + "/Versions.db";
     const string LogPath = ProjectDir + "/logs/DeepForgeToolset.log";
     // init classes
     Logger logger(LogPath.c_str(), "10mb");
