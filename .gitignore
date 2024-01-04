@@ -40,8 +40,11 @@ CMakeCache.txt
 /.ninja_deps
 /build.ninja
 build/
+/build/
 *.ninja
 /tests/
 .vscode/
 .idea/
 src/lib/
+/src/lib
+.vs/

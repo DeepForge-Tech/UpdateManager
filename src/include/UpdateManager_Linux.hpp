@@ -36,13 +36,11 @@
 #include <map>
 #include "json/json.h"
 #include <fstream>
-#include "zipper/unzipper.h"
 #include <curl/curl.h>
 #include "Logger.cpp"
 
 /* The `#define` directive is used to define a constant value in C++. In this case, `OS_NAME` is defined as the string "Linux", and `NameVersionTable` is defined as the string "LinuxVersions". These constants can be used throughout the code to represent the operating system name and the name of the version table for Linux. */
 #define OS_NAME "Linux"
-#define NameVersionTable "LinuxVersions"
 
 using namespace std;
 using namespace DB;
@@ -65,12 +63,12 @@ namespace Linux
     // string type
     string Architecture;
     string Answer;
-    const string OrganizationFolder = "usr/bin";
-    const string ApplicationFolder = "usr/bin/DeepForge/DeepForge-Toolset";
+    const string OrganizationFolder = "/usr/bin/DeepForge";
+    const string ApplicationFolder = OrganizationFolder + "/UpdateManager";
     const string TempFolder = ApplicationFolder + "/Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
     std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
-    string DB_PATH = TempFolder + "/Versions.db";
+    const string DB_PATH = TempFolder + "/Versions.db";
 
     // Main class
     class Update
@@ -79,15 +77,11 @@ namespace Linux
         Update()
         {
             GetArchitectureOS();
-            ImportAppInformation();
-            if (filesystem::exists(DB_PATH) == false)
-            {
-                MakeDirectory(TempFolder);
-                Download(DB_URL,TempFolder);
-                database.open(&DB_PATH);
-            }
+            MakeDirectory(TempFolder);
+            Download(DB_URL, TempFolder);
+            database.open(&DB_PATH);
         }
-        void InstallLatestRelease(string version);
+        void InstallLatestRelease(string name, string version);
         void CheckNewVersion();
 
     private:
@@ -117,26 +111,7 @@ namespace Linux
             string symlinkPath = string(UserFolder) + "/Desktop/" + nameSymlink;
             if (filesystem::exists(symlinkPath) == false)
                 // CreateHardLinkA(symlinkPath.c_str(), filePath.c_str(), NULL);
-                filesystem::create_hard_link(filePath,symlinkPath);
-        }
-
-        void ImportAppInformation()
-        {
-            try
-            {
-                ifstream f("./AppInformation.json");
-                // File open check
-                if (f.is_open())
-                {
-                    // Dictionary entry with translation
-                    f >> AppInformation;
-                    f.close();
-                }
-            }
-            catch (exception& error)
-            {
-                logger.SendError(Architecture,"Empty",OS_NAME,"ImportAppInformation",error.what());
-            }
+                filesystem::create_hard_link(filePath, symlinkPath);
         }
 
         /*The `MakeDirectory` function is responsible for creating a directory (folder) in the file system.*/
@@ -173,7 +148,7 @@ namespace Linux
             }
             catch (exception &error)
             {
-                logger.SendError(Architecture,"Empty",OS_NAME,"MakeDirectory",error.what());
+                logger.SendError(Architecture, "Empty", OS_NAME, "MakeDirectory", error.what());
             }
         }
         /*The 'UnpackArchive' function takes two parameters: 'path_from' and 'path_to'.*/
@@ -181,23 +156,74 @@ namespace Linux
         {
             try
             {
-                Unzipper unzipper(path_from);
-                unzipper.extract(path_to);
-                unzipper.close();
+                MakeDirectory(path_to);
+                int err;
+                struct zip *zip = zip_open(path_from.c_str(), ZIP_RDONLY, &err);
+                if (zip == nullptr)
+                {
+                    string ErrorText = "Cannot open zip archive: " + path_from;
+                    throw runtime_error(ErrorText);
+                }
+
+                int num_entries = zip_get_num_entries(zip, 0);
+                for (int i = 0; i < num_entries; ++i)
+                {
+                    zip_stat_t zip_stat;
+                    zip_stat_init(&zip_stat);
+                    int err = zip_stat_index(zip, i, 0, &zip_stat);
+                    if (err != 0)
+                    {
+                        zip_close(zip);
+                    }
+
+                    string file_name = zip_stat.name;
+                    string full_path = path_to + "/" + file_name;
+                    filesystem::path file_dir(full_path);
+                    MakeDirectory(file_dir.remove_filename().string());
+
+                    struct zip_file *zip_file = zip_fopen_index(zip, i, 0);
+                    if (zip_file == nullptr)
+                    {
+                        string ErrorText = "Cannot open file in zip archive: " + file_name;
+                        zip_close(zip);
+                        throw runtime_error(ErrorText);
+                    }
+
+                    if (filesystem::is_directory(full_path) == false)
+                    {
+                        ofstream out_file(full_path, ios::binary);
+                        if (!out_file.is_open())
+                        {
+                            string ErrorText = "Cannot open file for writing: " + full_path;
+                            zip_fclose(zip_file);
+                            zip_close(zip);
+                            throw runtime_error(ErrorText);
+                        }
+                        vector<char> buffer(zip_stat.size);
+                        zip_fread(zip_file, buffer.data(), buffer.size());
+                        out_file.write(buffer.data(), buffer.size());
+                        out_file.close();
+                    }
+
+                    zip_fclose(zip_file);
+                }
+
+                zip_close(zip);
             }
             catch (exception &error)
             {
-                logger.SendError(Architecture,"Empty",OS_NAME,"UnpackArchive",error.what());
+                logger.SendError(Architecture, "Empty", OS_NAME, "UnpackArchive()", error.what());
+                cerr << "❌ " << error.what() << endl;
             }
         }
         // Method for getting architecture of OS
         void GetArchitectureOS()
         {
-            #if defined(__x86_64__)
-                Architecture = "amd64";
-            #elif __arm__
-                Architecture = "arm64";
-            #endif
+#if defined(__x86_64__)
+            Architecture = "amd64";
+#elif __arm__
+            Architecture = "arm64";
+#endif
         }
     };
 }
