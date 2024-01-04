@@ -62,9 +62,10 @@ if (WIN32)
     Threads::Threads
   )
 elseif(APPLE)
+  set(CMAKE_CXX_FLAGS "-lstdc++")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++") 
   find_package(libzip REQUIRED)
-  find_package(CURL)
+  # find_package(CURL)
   # if(CURL_FOUND)
   #   include_directories(${CURL_INCLUDE_DIR})
   #   set(requiredlibs ${requiredlibs} ${CURL_LIBRARIES} )
@@ -79,7 +80,7 @@ elseif(APPLE)
   set(LIBRARIES
     fmt::fmt 
     jsoncpp_static
-    libcurl
+    libcurl_static
     libzip::zip
     SQLite
     Threads::Threads
