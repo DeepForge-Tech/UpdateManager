@@ -55,10 +55,6 @@ namespace Windows
 {   
     // int type
     int result;
-    // init class
-    Logger logger("./logs/DeepForgeToolset.log", "10mb");
-    Database database;
-    Value AppInformation;
     // string type
     string Architecture;
     string Answer;
@@ -66,8 +62,13 @@ namespace Windows
     const string ApplicationFolder = "C:\\ProgramData\\DeepForge\\UpdateManager";
     const string TempFolder = ApplicationFolder + "\\Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
-    filesystem::path ProjectDir = filesystem::current_path().generic_string();
-    string DB_PATH = TempFolder + "\\Versions.db";
+    string ProjectDir = filesystem::current_path().generic_string();
+    string DB_PATH = TempFolder + "/Versions.db";
+    // init class
+    const string LogPath = ProjectDir + "/logs/DeepForgeToolset.log";
+    Logger logger(LogPath.c_str(), "10mb");
+    Database database;
+    Value AppInformation;
 
     class WriteData : public IBindStatusCallback
     {

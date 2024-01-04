@@ -54,10 +54,6 @@ namespace Linux
         size_t WriteProcess = fwrite(ptr, size, nmemb, stream);
         return WriteProcess;
     }
-    // init classes
-    Logger logger("./logs/DeepForgeToolset.log", "10mb");
-    Database database;
-    Json::Value AppInformation;
     // int type
     int result;
     // string type
@@ -67,9 +63,13 @@ namespace Linux
     const string ApplicationFolder = OrganizationFolder + "/UpdateManager";
     const string TempFolder = ApplicationFolder + "/Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
-    std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
+    string ProjectDir = std::filesystem::current_path().generic_string();
     const string DB_PATH = TempFolder + "/Versions.db";
-
+    const string LogPath = ProjectDir + "/logs/DeepForgeToolset.log";
+    // init classes
+    Logger logger(LogPath.c_str(), "10mb");
+    Database database;
+    Json::Value AppInformation;
     // Main class
     class Update
     {

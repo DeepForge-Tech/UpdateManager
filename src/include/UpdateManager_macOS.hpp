@@ -57,10 +57,6 @@ namespace macOS
         size_t WriteProcess = fwrite(ptr, size, nmemb, stream);
         return WriteProcess;
     }
-    // init class
-    Logger logger("./logs/DeepForgeToolset.log", "10mb");
-    Database database;
-    Json::Value AppInformation;
     // int type
     int result;
     // string type
@@ -70,8 +66,13 @@ namespace macOS
     string ApplicationFolder;
     string TempFolder;
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
-    filesystem::path ProjectDir = filesystem::current_path().generic_string();
+    string ProjectDir = filesystem::current_path().generic_string();
     string DB_PATH = TempFolder + "/Versions.db";
+    // init class
+    const string LogPath = ProjectDir + "/logs/DeepForgeToolset.log";
+    Logger logger(LogPath.c_str(), "10mb");
+    Database database;
+    Json::Value AppInformation;
 
     // Main class
     class Update
