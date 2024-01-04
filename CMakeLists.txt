@@ -65,16 +65,21 @@ elseif(APPLE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++") 
   find_package(libzip REQUIRED)
   find_package(CURL)
-  if(CURL_FOUND)
-    include_directories(${CURL_INCLUDE_DIR})
-    set(requiredlibs ${requiredlibs} ${CURL_LIBRARIES} )
-  else(CURL_FOUND)
-    message(FATAL_ERROR "Could not find the CURL library and development files.")
-  endif(CURL_FOUND)
+  # if(CURL_FOUND)
+  #   include_directories(${CURL_INCLUDE_DIR})
+  #   set(requiredlibs ${requiredlibs} ${CURL_LIBRARIES} )
+  # else(CURL_FOUND)
+  #   message(FATAL_ERROR "Could not find the CURL library and development files.")
+  # endif(CURL_FOUND)
+  FetchContent_Declare(libcurl
+  GIT_REPOSITORY https://github.com/DeepForge-Technology/curl.git
+  GIT_TAG master
+  )
+  FetchContent_MakeAvailable(libcurl)
   set(LIBRARIES
     fmt::fmt 
     jsoncpp_static
-    CURL
+    libcurl
     libzip::zip
     SQLite
     Threads::Threads
