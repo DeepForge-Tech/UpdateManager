@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../DatabaseConnect.cpp"
+#include "../DatabaseConnect.hpp"
 #include <map>
 #include "json/json.h"
 #include <fstream>
