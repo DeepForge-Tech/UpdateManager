@@ -38,6 +38,10 @@
 #include <fstream>
 #include <curl/curl.h>
 #include "Logger.cpp"
+#include <string>
+#include <vector>
+#include "zip/zip.h"
+#include <cstring>
 
 /* The `#define` directive is used to define a constant value in C++. In this case, `OS_NAME` is defined as the string "Linux", and `NameVersionTable` is defined as the string "LinuxVersions". These constants can be used throughout the code to represent the operating system name and the name of the version table for Linux. */
 #define OS_NAME "Linux"
