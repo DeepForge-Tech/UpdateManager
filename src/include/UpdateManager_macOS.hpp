@@ -99,24 +99,47 @@ namespace macOS
         void CheckNewVersion();
 
     private:
-        int Download(string url, string dir)
+        void Download(string url, string dir)
         {
-            string name = (url.substr(url.find_last_of("/")));
-            string filename = dir + "/" + name.replace(name.find("/"), 1, "");
-            FILE *file = fopen(filename.c_str(), "wb");
-            CURL *curl = curl_easy_init();
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
-            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-            curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
-            curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-            CURLcode response = curl_easy_perform(curl);
-            curl_easy_cleanup(curl);
-            fclose(file);
-            return 200;
+            try {
+                string name = (url.substr(url.find_last_of("/")));
+                string filename = dir + "/" + name.replace(name.find("/"), 1, "");
+                FILE *file = fopen(filename.c_str(), "wb");
+                CURL *curl = curl_easy_init();
+                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+                curl_easy_setopt(curl, CURLOPT_NOPROGRESS, true);
+                curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+                curl_easy_setopt(curl, CURLOPT_FILETIME, 1L);
+                curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
+                curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteData);
+                curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+                CURLcode response = curl_easy_perform(curl);
+                if (response != CURLE_OK)
+                {
+                    switch (response)
+                    {
+                    case CURLE_COULDNT_CONNECT:
+                        throw domain_error("Failed to connect to host or proxy.");
+                    case CURLE_COULDNT_RESOLVE_HOST:
+                        throw domain_error("Failed to resolve host. The given remote host was not allowed.");
+                    case CURLE_COULDNT_RESOLVE_PROXY:
+                        throw domain_error("Failed to resolve proxy. The given proxy host could not be resolved.");
+                    case CURLE_UNSUPPORTED_PROTOCOL:
+                        throw domain_error("Failed to connect to the site using this protocol.");
+                    case CURLE_SSL_CONNECT_ERROR:
+                        throw domain_error("The problem occurred during SSL/TLS handshake.");
+                    }
+                }
+                curl_easy_cleanup(curl);
+                fclose(file);
+            }
+            catch (exception& error)
+            {
+                string ErrorText = "==> ❌ " + string(error.what());
+                logger.SendError(Architecture,"Empty",OS_NAME,"Download()",error.what());
+                cerr << ErrorText << endl;
+            }
         }
 
         void CreateSymlink(string nameSymlink, string filePath)

@@ -113,7 +113,7 @@ private:
                     CreateDirectoryA(fullPath.c_str(), NULL);
                 }
             }
-            catch (exception &error)
+            catch (exception& error)
             {
                 SendError("Empty", "Empty", "Error", "Logger.MakeDirectory", error.what());
             }
@@ -151,7 +151,7 @@ private:
                     filesystem::create_directory(fullPath);
                 }
             }
-            catch (exception &error)
+            catch (exception& error)
             {
                 SendError("Empty", "Empty", "Empty", "Logger.MakeDirectory", error.what());
             }

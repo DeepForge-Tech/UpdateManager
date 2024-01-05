@@ -49,9 +49,9 @@ void Update::InstallLatestRelease(string name,string AppVersionTable,string vers
     string NewApplicationFolder = OrganizationFolder + "/" + name;
     MakeDirectory(TempFolder);
     MakeDirectory(NewApplicationFolder);
-    result = Download(DB_URL, TempFolder);
+    Download(DB_URL, TempFolder);
     NewApplication_Url = database.GetApplicationURL(AppVersionTable, "stable", Architecture == "amd64" ? "Url" : "Url_arm64", Architecture, version);
-    result = Download(NewApplication_Url, TempFolder);
+    Download(NewApplication_Url, TempFolder);
     // Scan NewApplicationFolder and directorins in this folder,if name of dir not == "Temp"
     for (const auto &entry : filesystem::directory_iterator(NewApplicationFolder))
     {
@@ -86,7 +86,7 @@ void Update::CheckNewVersion()
                 InstallLatestRelease(element.first,element.second,LatestVersion);
         }
     }
-    catch (exception &error)
+    catch (exception& error)
     {
         logger.SendError(Architecture, "Empty", OS_NAME, "CheckNewVersion", error.what());
     }
@@ -95,6 +95,5 @@ void Update::CheckNewVersion()
 int main()
 {
     App.CheckNewVersion();
-    system("pause");
     return 0;
 }

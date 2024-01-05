@@ -38,7 +38,7 @@ namespace UNIX
                     exit(EXIT_FAILURE);
                 }
             }
-            catch (const std::exception &e)
+            catch (exception& error)
             {
                 throw runtime_error("Error creating socket");
             }
