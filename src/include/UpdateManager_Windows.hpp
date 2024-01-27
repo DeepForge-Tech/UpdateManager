@@ -28,46 +28,47 @@
 #include <filesystem>
 #include <iostream>
 #include <conio.h>
+#include <winsock2.h>
 #include <Windows.h>
-#pragma comment(lib, "urlmon.lib")
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../DatabaseConnect.cpp"
+#include "../DatabaseConnect.hpp"
 #include <map>
-#include "json/json.h"
 #include <fstream>
-#include "zipper/unzipper.h"
+#include <cctype>
 #include "Logger.cpp"
+#include <fstream>
+#include <urlmon.h>
+#include "json/json.h"
+#pragma comment(lib, "urlmon.lib")
 
 /* The `#define` directive is used to define a constant value in C++. In this case, `OS_NAME` is defined as "Windows" and `NameVersionTable` is defined as "WindowsVersions". These constants can be used throughout the code to represent the operating system name and the name of the version table in the database. */
 #define OS_NAME "Windows"
-#define NameVersionTable "WindowsVersions"
 
 using namespace std;
 using namespace DB;
 using namespace Json;
-using namespace zipper;
 
 namespace Windows
 {   
     // int type
     int result;
-    // init class
-    Logger logger("./logs/DeepForgeToolset.log", "10mb");
-    Database database;
-    Value AppInformation;
     // string type
     string Architecture;
     string Answer;
     const string OrganizationFolder = "C:\\ProgramData\\DeepForge";
-    const string ApplicationFolder = "C:\\ProgramData\\DeepForge\\DeepForge-Toolset";
+    const string ApplicationFolder = "C:\\ProgramData\\DeepForge\\UpdateManager";
     const string TempFolder = ApplicationFolder + "\\Temp";
     const string DB_URL = "https://github.com/DeepForge-Technology/DeepForge-Toolset/releases/download/InstallerUtils/Versions.db";
-    std::filesystem::path ProjectDir = std::filesystem::current_path().generic_string();
-    string DB_PATH = TempFolder + "\\Versions.db";
+    string ProjectDir = filesystem::current_path().generic_string();
+    string DB_PATH = TempFolder + "/Versions.db";
+    // init class
+    const string LogPath = ProjectDir + "/logs/DeepForgeToolset.log";
+    Logger logger(LogPath.c_str(), "10mb");
+    Database database;
+    Value AppInformation;
 
     class WriteData : public IBindStatusCallback
     {
@@ -125,15 +126,11 @@ namespace Windows
         Update()
         {
             GetArchitectureOS();
-            ImportAppInformation();
-            if (filesystem::exists(DB_PATH) == false)
-            {
-                MakeDirectory(TempFolder);
-                Download(DB_URL,TempFolder);
-            }
+            MakeDirectory(TempFolder);
+            Download(DB_URL,TempFolder);
             database.open(&DB_PATH);
         }
-        void InstallLatestRelease(string version);
+        void InstallLatestRelease(string name,string AppVersionTable,string version);
         void CheckNewVersion();
 
     private:
@@ -147,7 +144,7 @@ namespace Windows
                 HRESULT Download = URLDownloadToFile(NULL, url.c_str(), filename.c_str(), 0, static_cast<IBindStatusCallback *>(&writer));
                 return 200;
             }
-            catch (exception &error)
+            catch (exception& error)
             {
                 return 502;
             }
@@ -161,25 +158,6 @@ namespace Windows
             string symlinkPath = string(UserFolder) + "\\Desktop\\" + nameSymlink;
             if (filesystem::exists(symlinkPath) == false)
                 CreateHardLinkA(symlinkPath.c_str(), filePath.c_str(), NULL);
-        }
-
-        void ImportAppInformation()
-        {
-            try
-            {
-                ifstream f("./AppInformation.json");
-                // File open check
-                if (f.is_open())
-                {
-                    // Dictionary entry with translation
-                    f >> AppInformation;
-                    f.close();
-                }
-            }
-            catch (exception &error)
-            {
-                logger.SendError(Architecture,"Empty",OS_NAME,"ImportAppInformation",error.what());
-            }
         }
 
         /* The 'MakeDirectory' function is used to create a directory (folder) in the file system.*/
@@ -199,7 +177,7 @@ namespace Windows
                         fullPath = fullPath + "\\" + currentDir;
                         if (filesystem::exists(fullPath) == false)
                         {
-                            filesystem::create_directory(fullPath);
+                            CreateDirectoryA(fullPath.c_str(), NULL);
                         }
                     }
                     else
@@ -208,37 +186,36 @@ namespace Windows
                     }
                     dir.erase(0, pos + delimiter.length());
                 }
-                fullPath = fullPath + "\\" + dir;
+                if (fullPath != "")
+                {
+                    fullPath = fullPath + "\\" + dir;
+                }
+                else
+                {
+                    fullPath = dir + "\\";
+                }
                 if (filesystem::exists(fullPath) == false)
                 {
-                    filesystem::create_directory(fullPath);
+                    CreateDirectoryA(fullPath.c_str(), NULL);
                 }
             }
             catch (exception &error)
             {
-                logger.SendError(Architecture,"Empty",OS_NAME,"MakeDirectory",error.what());
+                logger.SendError(Architecture, "Empty", OS_NAME, "MakeDirectory", error.what());
             }
         }
         /*The 'UnpackArchive' function takes two parameters: 'path_from' and 'path_to'.*/
         void UnpackArchive(string path_from, string path_to)
         {
-            try
-            {
-                Unzipper unzipper(path_from);
-                unzipper.extract(path_to);
-                unzipper.close();
-            }
-            catch (exception &error)
-            {
-                logger.SendError(Architecture,"Empty",OS_NAME,"UnpackArchive",error.what());
-            }
+            string unpack_command = "tar -xf" + path_from + " --directory " + path_to;
+            system(unpack_command.c_str());
         }
         // Method for getting architecture of OS
         void GetArchitectureOS()
         {
-            #if defined(__x86_64__)
+            #if defined(_M_AMD64)
                 Architecture = "amd64";
-            #elif __arm__
+            #elif _M_ARM64
                 Architecture = "arm64";
             #endif
         }

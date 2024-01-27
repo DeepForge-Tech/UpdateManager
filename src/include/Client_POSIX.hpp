@@ -2,6 +2,8 @@
 #include <iostream>
 #include <winsock2.h>
 #include <fstream>
+#include <filesystem>
+
 using namespace std;
 
 #pragma comment(lib, "ws2_32.lib")
@@ -9,7 +11,7 @@ using namespace std;
 
 #define IP_ADDRESS "64.226.99.105" // or "localhost" - ip address of UDP server
 #define BUFFER_MAX_LENGHT 16384           // max length of answer
-#define PORT 743
+#define PORT 756
 
 using namespace std;
 
@@ -60,6 +62,12 @@ namespace POSIX
         }
         void SEND_JSON_FILE(string path)
         {
+            if (filesystem::exists(path) == true)
+            {
+                fstream file(path.c_str(),ios::binary);
+                file << "";
+                file.close();
+            }
             /* This code is responsible for reading the contents of a file specified by the `path` variable and storing it in the `data` array. */
             FILE *fp;
             char data[BUFFER_MAX_LENGHT];
